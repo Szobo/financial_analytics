@@ -1,0 +1,30 @@
+services:
+  # Backend API Service
+  - type: web
+    name: tunafinance-api
+    env: node
+    buildCommand: npm install
+    startCommand: node server.cjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CONSUMER_KEY
+        sync: false
+      - key: CONSUMER_SECRET
+        sync: false
+      - key: SHORTCODE
+        sync: false
+      - key: PASSKEY
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+
+  # Frontend Service
+  - type: web
+    name: tunafinance-web
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run preview
+    envVars:
+      - key: VITE_API_URL
+        value: https://tunafinance-api.onrender.com 
