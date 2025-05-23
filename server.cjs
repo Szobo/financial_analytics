@@ -118,15 +118,24 @@ app.post("/api/validation", (req, res) => {
   res.status(200).json({ ResultCode: 0, ResultDesc: "Accepted" });
 });
 
+// Helper: Get the public URL for webhooks
+function getPublicUrl() {
+  // Prefer PUBLIC_URL env, fallback to Render's default
+  return process.env.PUBLIC_URL || "https://tunafinance-api.onrender.com";
+}
+
 // Register webhook URLs with Safaricom
 app.get("/api/register-url", async (req, res) => {
   try {
     const accessToken = await getMpesaAccessToken();
+    const confirmationUrl = `${getPublicUrl()}/api/confirmation`;
+    const validationUrl = `${getPublicUrl()}/api/validation`;
+    console.log("Registering URLs:", { confirmationUrl, validationUrl });
     const payload = {
       ShortCode: process.env.SHORTCODE || process.env.TILL_NUMBER,
       ResponseType: "Completed",
-      ConfirmationURL: `${process.env.PUBLIC_URL || "https://your-backend.onrender.com"}/api/confirmation`,
-      ValidationURL: `${process.env.PUBLIC_URL || "https://your-backend.onrender.com"}/api/validation`
+      ConfirmationURL: confirmationUrl,
+      ValidationURL: validationUrl
     };
     const url = (process.env.BASE_URL || "https://api.safaricom.co.ke") + "/mpesa/c2b/v1/registerurl";
     const response = await axios.post(url, payload, {
@@ -135,11 +144,18 @@ app.get("/api/register-url", async (req, res) => {
         "Content-Type": "application/json"
       }
     });
-    res.status(200).json({ message: "Registered!", data: response.data });
+    res.status(200).json({ message: "Registered!", data: response.data, registeredUrls: { confirmationUrl, validationUrl } });
   } catch (error) {
     console.error("Registration Error", error.response?.data || error.message);
     res.status(500).json({ error: "Failed to register" });
   }
+});
+
+// Endpoint to check currently configured webhook URLs
+app.get("/api/registered-urls", (req, res) => {
+  const confirmationUrl = `${getPublicUrl()}/api/confirmation`;
+  const validationUrl = `${getPublicUrl()}/api/validation`;
+  res.json({ confirmationUrl, validationUrl });
 });
 
 // Endpoint to get all stored transactions (for frontend)
