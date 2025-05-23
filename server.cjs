@@ -25,6 +25,23 @@ const port = process.env.PORT || 3000;
 // In-memory transaction storage (replace with a database in production)
 const transactions = [];
 
+// Helper: Get M-PESA Access Token
+async function getMpesaAccessToken() {
+  const consumerKey = process.env.CONSUMER_KEY;
+  const consumerSecret = process.env.CONSUMER_SECRET;
+  const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64");
+  const url = (process.env.BASE_URL || "https://api.safaricom.co.ke") + "/oauth/v1/generate?grant_type=client_credentials";
+  try {
+    const response = await axios.get(url, {
+      headers: { Authorization: `Basic ${auth}` },
+    });
+    return response.data.access_token;
+  } catch (error) {
+    console.error("Failed to get M-PESA access token:", error.response?.data || error.message);
+    throw new Error("Failed to get M-PESA access token");
+  }
+}
+
 // Basic logging middleware
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
@@ -88,112 +105,44 @@ app.get("/api/test-credentials", async (req, res) => {
   }
 });
 
-// Step 1: Get Access Token
-app.get("/api/token", async (req, res) => {
-  const consumerKey = process.env.CONSUMER_KEY;
-  const consumerSecret = process.env.CONSUMER_SECRET;
-  const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64");
-
-  try {
-    const response = await axios.get("https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials", {
-      headers: {
-        Authorization: `Basic ${auth}`,
-      },
-    });
-
-    res.json(response.data);
-  } catch (error) {
-    console.error("Error fetching token", error);
-    res.status(500).send("Token error");
-  }
-});
-
-// Step 2: Register URL for real-time transaction notifications
-app.post("/api/register-url", async (req, res) => {
-  const consumerKey = process.env.CONSUMER_KEY;
-  const consumerSecret = process.env.CONSUMER_SECRET;
-  const shortcode = process.env.SHORTCODE;
-  const passkey = process.env.PASSKEY;
-  const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64");
-
-  try {
-    // Get access token
-    const tokenRes = await axios.get("https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials", {
-      headers: { Authorization: `Basic ${auth}` },
-    });
-    const accessToken = tokenRes.data.access_token;
-
-    // Register URL
-    const timestamp = new Date().toISOString().replace(/[^0-9]/g, "").slice(0, -3);
-    const password = Buffer.from(shortcode + passkey + timestamp).toString("base64");
-
-    const response = await axios.post(
-      "https://sandbox.safaricom.co.ke/mpesa/c2b/v1/registerurl",
-      {
-        ShortCode: shortcode,
-        ResponseType: "Completed",
-        ConfirmationURL: "https://your-domain.com/api/confirmation",
-        ValidationURL: "https://your-domain.com/api/validation",
-        Password: password,
-        Timestamp: timestamp
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
-        }
-      }
-    );
-
-    res.json(response.data);
-  } catch (error) {
-    console.error("Error registering URL:", error.response?.data || error.message);
-    res.status(500).json({ error: error.response?.data || error.message });
-  }
-});
-
-// Step 3: Handle incoming transaction notifications
+// Webhook: Confirmation
 app.post("/api/confirmation", (req, res) => {
-  const transaction = {
-    date: new Date().toISOString(),
-    amount: req.body.TransAmount,
-    msisdn: req.body.MSISDN,
-    billRefNumber: req.body.BillRefNumber,
-    transactionType: req.body.TransactionType,
-    transID: req.body.TransID,
-    transTime: req.body.TransTime
-  };
-
-  // Store the transaction
-  transactions.unshift(transaction);
-  
-  // Send acknowledgment
-  res.json({
-    ResultCode: 0,
-    ResultDesc: "Success"
-  });
+  console.log("CONFIRMATION RECEIVED:", req.body);
+  transactions.unshift({ ...req.body, receivedAt: new Date().toISOString() });
+  res.status(200).json({ ResultCode: 0, ResultDesc: "Accepted" });
 });
 
-// Step 4: Validate incoming transactions
+// Webhook: Validation
 app.post("/api/validation", (req, res) => {
-  // Add your validation logic here
-  // For example, check if the amount is within acceptable limits
-  const amount = parseFloat(req.body.TransAmount);
-  
-  if (amount > 0) {
-    res.json({
-      ResultCode: 0,
-      ResultDesc: "Success"
+  console.log("VALIDATION RECEIVED:", req.body);
+  res.status(200).json({ ResultCode: 0, ResultDesc: "Accepted" });
+});
+
+// Register webhook URLs with Safaricom
+app.get("/api/register-url", async (req, res) => {
+  try {
+    const accessToken = await getMpesaAccessToken();
+    const payload = {
+      ShortCode: process.env.SHORTCODE || process.env.TILL_NUMBER,
+      ResponseType: "Completed",
+      ConfirmationURL: `${process.env.PUBLIC_URL || "https://your-backend.onrender.com"}/api/confirmation`,
+      ValidationURL: `${process.env.PUBLIC_URL || "https://your-backend.onrender.com"}/api/validation`
+    };
+    const url = (process.env.BASE_URL || "https://api.safaricom.co.ke") + "/mpesa/c2b/v1/registerurl";
+    const response = await axios.post(url, payload, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      }
     });
-  } else {
-    res.json({
-      ResultCode: 1,
-      ResultDesc: "Invalid amount"
-    });
+    res.status(200).json({ message: "Registered!", data: response.data });
+  } catch (error) {
+    console.error("Registration Error", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to register" });
   }
 });
 
-// Step 5: Get all transactions
+// Endpoint to get all stored transactions (for frontend)
 app.get("/api/transactions", (req, res) => {
   res.json(transactions);
 });
