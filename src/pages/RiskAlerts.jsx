@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
+const API_URL = 'https://tunafinance-api.onrender.com';
+
 export default function RiskAlerts() {
   const [transactions, setTransactions] = useState([]);
   const [alerts, setAlerts] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:3000/api/transactions")
+    axios.get(`${API_URL}/api/transactions`)
       .then(res => setTransactions(res.data))
       .catch(err => setTransactions([]));
   }, []);
