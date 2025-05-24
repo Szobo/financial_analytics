@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
+const API_URL = 'https://tunafinance-api.onrender.com';
+
 function calculateScore(transactions) {
   if (transactions.length === 0) return 500;
   const net = transactions.reduce((sum, t) => sum + t.amount, 0);
@@ -15,7 +17,7 @@ export default function CreditScore() {
   const [score, setScore] = useState(500);
 
   useEffect(() => {
-    axios.get("http://localhost:3000/api/transactions")
+    axios.get(`${API_URL}/api/transactions`)
       .then(res => setTransactions(res.data))
       .catch(err => setTransactions([]));
   }, []);
