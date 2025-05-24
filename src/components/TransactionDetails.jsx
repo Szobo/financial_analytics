@@ -146,4 +146,4 @@ export default function TransactionDetails() {
       </div>
     </div>
   );
-} 
+}
