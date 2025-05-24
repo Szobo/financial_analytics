@@ -5,7 +5,7 @@ const API_URL = 'https://tunafinance-api.onrender.com';
 
 function calculateScore(transactions) {
   if (transactions.length === 0) return 500;
-  const net = transactions.reduce((sum, t) => sum + t.amount, 0);
+  const net = transactions.reduce((sum, t) => sum + Number(t.TransAmount), 0);
   let score = 600 + Math.floor(net / 1000) * 10;
   if (score > 850) score = 850;
   if (score < 300) score = 300;
