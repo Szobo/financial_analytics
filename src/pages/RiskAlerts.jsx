@@ -18,14 +18,14 @@ export default function RiskAlerts() {
     let newAlerts = [];
     if (transactions.length > 0) {
       const last = transactions[transactions.length - 1];
-      if (last.amount < 0) {
+      if (Number(last.TransAmount) < 0) {
         newAlerts.push("Recent transaction was an expense. Monitor your spending.");
       }
-      const total = transactions.reduce((sum, t) => sum + t.amount, 0);
+      const total = transactions.reduce((sum, t) => sum + Number(t.TransAmount), 0);
       if (total < 0) {
         newAlerts.push("Warning: Your net cash flow is negative.");
       }
-      if (transactions.length > 5 && transactions.slice(-5).every(t => t.amount < 0)) {
+      if (transactions.length > 5 && transactions.slice(-5).every(t => Number(t.TransAmount) < 0)) {
         newAlerts.push("Alert: 5 consecutive expenses detected.");
       }
     }
