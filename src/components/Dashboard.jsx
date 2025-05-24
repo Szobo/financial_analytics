@@ -22,13 +22,15 @@ ChartJS.register(
   Legend
 );
 
+const API_URL = 'https://tunafinance-api.onrender.com';
+
 export default function Dashboard() {
   const [transactions, setTransactions] = useState([]);
   const [insight, setInsight] = useState("Loading...");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get("http://localhost:3000/api/transactions")
+    axios.get(`${API_URL}/api/transactions`)
       .then(res => {
         setTransactions(res.data);
         setLoading(false);
