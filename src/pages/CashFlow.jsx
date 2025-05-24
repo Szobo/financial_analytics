@@ -37,11 +37,11 @@ function groupTransactions(transactions, timeframe) {
       d.setDate(now.getDate() - i);
       const label = d.toLocaleDateString("en-KE", { weekday: "short" });
       const dayTrans = transactions.filter(
-        t => new Date(t.date).toDateString() === d.toDateString()
+        t => new Date(Number(t.TransTime)).toDateString() === d.toDateString()
       );
       groups.push({
         label,
-        total: dayTrans.reduce((sum, t) => sum + t.amount, 0),
+        total: dayTrans.reduce((sum, t) => sum + Number(t.TransAmount), 0),
         tx: dayTrans,
       });
     }
@@ -53,12 +53,12 @@ function groupTransactions(transactions, timeframe) {
       end.setDate(start.getDate() + 6);
       const label = `Wk ${4 - i}`;
       const weekTrans = transactions.filter(t => {
-        const td = new Date(t.date);
+        const td = new Date(Number(t.TransTime));
         return td >= start && td <= end;
       });
       groups.push({
         label,
-        total: weekTrans.reduce((sum, t) => sum + t.amount, 0),
+        total: weekTrans.reduce((sum, t) => sum + Number(t.TransAmount), 0),
         tx: weekTrans,
       });
     }
@@ -67,12 +67,12 @@ function groupTransactions(transactions, timeframe) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const label = d.toLocaleDateString("en-KE", { month: "short" });
       const monthTrans = transactions.filter(t => {
-        const td = new Date(t.date);
+        const td = new Date(Number(t.TransTime));
         return td.getMonth() === d.getMonth() && td.getFullYear() === d.getFullYear();
       });
       groups.push({
         label,
-        total: monthTrans.reduce((sum, t) => sum + t.amount, 0),
+        total: monthTrans.reduce((sum, t) => sum + Number(t.TransAmount), 0),
         tx: monthTrans,
       });
     }
@@ -80,10 +80,10 @@ function groupTransactions(transactions, timeframe) {
     for (let i = 2; i >= 0; i--) {
       const year = now.getFullYear() - i;
       const label = year.toString();
-      const yearTrans = transactions.filter(t => new Date(t.date).getFullYear() === year);
+      const yearTrans = transactions.filter(t => new Date(Number(t.TransTime)).getFullYear() === year);
       groups.push({
         label,
-        total: yearTrans.reduce((sum, t) => sum + t.amount, 0),
+        total: yearTrans.reduce((sum, t) => sum + Number(t.TransAmount), 0),
         tx: yearTrans,
       });
     }
@@ -244,10 +244,10 @@ export default function CashFlow() {
             ) : (
               txHistory.map((t, i) => (
                 <tr key={i}>
-                  <td className="px-2 py-1">{new Date(t.date).toLocaleString()}</td>
-                  <td className="px-2 py-1">KSh {t.amount}</td>
-                  <td className="px-2 py-1">{t.msisdn}</td>
-                  <td className="px-2 py-1">{t.billRefNumber}</td>
+                  <td className="px-2 py-1">{t.TransTime}</td>
+                  <td className="px-2 py-1">KSh {t.TransAmount}</td>
+                  <td className="px-2 py-1">{t.MSISDN}</td>
+                  <td className="px-2 py-1">{t.BillRefNumber}</td>
                 </tr>
               ))
             )}
