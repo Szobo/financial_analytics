@@ -42,8 +42,8 @@ export default function Dashboard() {
   }, []);
 
   // Calculate income, expenses, float
-  const income = transactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0);
-  const expenses = transactions.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  const income = transactions.filter(t => Number(t.TransAmount) > 0).reduce((sum, t) => sum + Number(t.TransAmount), 0);
+  const expenses = transactions.filter(t => Number(t.TransAmount) < 0).reduce((sum, t) => sum + Math.abs(Number(t.TransAmount)), 0);
   const float = income - expenses;
 
   // Financial Health Indicator
@@ -65,13 +65,13 @@ export default function Dashboard() {
   const trendLabels = last7.map(d => d.toLocaleDateString("en-KE", { weekday: "short" }));
   const incomeData = last7.map(d => {
     return transactions
-      .filter(t => t.amount > 0 && new Date(t.date).toDateString() === d.toDateString())
-      .reduce((sum, t) => sum + t.amount, 0);
+      .filter(t => Number(t.TransAmount) > 0 && new Date(Number(t.TransTime))?.toDateString() === d.toDateString())
+      .reduce((sum, t) => sum + Number(t.TransAmount), 0);
   });
   const expenseData = last7.map(d => {
     return transactions
-      .filter(t => t.amount < 0 && new Date(t.date).toDateString() === d.toDateString())
-      .reduce((sum, t) => sum + Math.abs(t.amount), 0); // Always positive
+      .filter(t => Number(t.TransAmount) < 0 && new Date(Number(t.TransTime))?.toDateString() === d.toDateString())
+      .reduce((sum, t) => sum + Math.abs(Number(t.TransAmount)), 0); // Always positive
   });
 
   const trendChartData = {
@@ -179,10 +179,10 @@ export default function Dashboard() {
             ) : (
               recentTx.map((t, i) => (
                 <tr key={i}>
-                  <td className="px-2 py-1">{new Date(t.date).toLocaleString()}</td>
-                  <td className="px-2 py-1">KSh {t.amount}</td>
-                  <td className="px-2 py-1">{t.msisdn}</td>
-                  <td className="px-2 py-1">{t.billRefNumber}</td>
+                  <td className="px-2 py-1">{t.TransTime}</td>
+                  <td className="px-2 py-1">KSh {t.TransAmount}</td>
+                  <td className="px-2 py-1">{t.MSISDN}</td>
+                  <td className="px-2 py-1">{t.BillRefNumber}</td>
                 </tr>
               ))
             )}
