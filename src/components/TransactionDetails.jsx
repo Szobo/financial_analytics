@@ -121,16 +121,16 @@ export default function TransactionDetails() {
                 transactions.map((tx, index) => (
                   <tr key={index}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(tx.date).toLocaleString()}
+                      {tx.TransTime}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      KES {tx.amount}
+                      KES {tx.TransAmount}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {tx.msisdn}
+                      {tx.MSISDN}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {tx.billRefNumber}
+                      {tx.BillRefNumber}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
