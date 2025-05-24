@@ -26,6 +26,8 @@ ChartJS.register(
 
 const timeframes = ["Daily", "Weekly", "Monthly", "Yearly"];
 
+const API_URL = 'https://tunafinance-api.onrender.com';
+
 function groupTransactions(transactions, timeframe) {
   const now = new Date();
   let groups = [];
@@ -94,7 +96,7 @@ export default function CashFlow() {
   const [tab, setTab] = useState("Daily");
 
   useEffect(() => {
-    axios.get("http://localhost:3000/api/transactions")
+    axios.get(`${API_URL}/api/transactions`)
       .then(res => setTransactions(res.data))
       .catch(() => setTransactions([]));
   }, []);
